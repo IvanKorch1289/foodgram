@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
 
-from backend.recipes.constants import (
+from recipes.constants import (
     MAX_LENGTH_256_CHAR_FIELD,
     MAX_LENGTH_32_CHAR_FIELD,
     MAX_LENGTH_64_CHAR_FIELD,
@@ -79,7 +79,7 @@ class Recipes(BaseFieldModel):
         default=False,
         help_text='Находится ли в корзине'
     )
-    text = models.StringField(
+    text = models.CharField(
         help_text='Текст рецепта',
         max_length=MAX_LENGTH_256_CHAR_FIELD,
         blank=True,
