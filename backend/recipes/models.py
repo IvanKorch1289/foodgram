@@ -1,5 +1,5 @@
-from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
+from django.contrib.auth.models import AbstractUser
+from django.core.validators import MinValueValidator, MinLengthValidator
 from django.db import models
 
 from recipes.constants import (
@@ -8,9 +8,37 @@ from recipes.constants import (
     MAX_LENGTH_64_CHAR_FIELD,
     MIN_DURATION_VALUE
 )
+from recipes.validators import validate_username
 
 
-User = get_user_model()
+class User(AbstractUser):
+
+    password = models.CharField(
+        max_length=128,
+        help_text='Пароль',
+        validators=[
+            MinLengthValidator(8),
+            validate_username
+        ]
+    )
+    avatar = models.ImageField(
+        help_text='Аватар',
+        blank=True,
+        null=True
+    )
+    subscriptions = models.ManyToManyField(
+        related_name='subscriptions',
+        to='recipes.User',
+        verbose_name='Подписки',
+        blank=True,
+        null=True
+    )
+
+    class Meta:
+        default_related_name = 'users'
+        verbose_name = 'Пользователи'
+        verbose_name_plural = 'Пользователь'
+        ordering = ['username']
 
 
 class BaseFieldModel(models.Model):
@@ -22,8 +50,8 @@ class BaseFieldModel(models.Model):
         db_index=True
     )
     is_active = models.BooleanField(default=True)
-    create_at = models.DateTimeField(auto_now_add=True)
-    update_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         abstract = True
@@ -33,7 +61,7 @@ class BaseFieldModel(models.Model):
         return self.name
 
 
-class Tags(BaseFieldModel):
+class Tag(BaseFieldModel):
 
     name = models.CharField(
         max_length=MAX_LENGTH_32_CHAR_FIELD,
@@ -47,7 +75,7 @@ class Tags(BaseFieldModel):
         verbose_name_plural = 'Теги'
 
 
-class Ingredients(BaseFieldModel):
+class Ingredient(BaseFieldModel):
 
     measurement_unit = models.CharField(
         max_length=MAX_LENGTH_64_CHAR_FIELD,
@@ -60,7 +88,7 @@ class Ingredients(BaseFieldModel):
         unique_together = ('name', 'measurement_unit')
 
 
-class Recipes(BaseFieldModel):
+class Recipe(BaseFieldModel):
 
     author = models.ForeignKey(
         User,
@@ -68,7 +96,7 @@ class Recipes(BaseFieldModel):
         verbose_name='Автор рецепта'
     )
     ingredients = models.ManyToManyField(
-        Ingredients,
+        Ingredient,
         verbose_name='Ингредиенты'
     )
     is_favorited = models.BooleanField(
@@ -103,13 +131,12 @@ class Recipes(BaseFieldModel):
         help_text='Изображение'
     )
     tags = models.ManyToManyField(
-        Tags,
-        verbose_name='Список тегов',
-        blank=True,
-        null=True
+        Tag,
+        verbose_name='Список тегов'
     )
 
     class Meta(BaseFieldModel.Meta):
         default_related_name = 'recipes'
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
+        ordering = ['-created_at']

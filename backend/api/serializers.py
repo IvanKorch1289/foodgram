@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from recipes.models import Ingredients, Recipes, Tags
+from recipes.constants import NON_VALID_USERNAME
+from recipes.models import Ingredient, Recipe, Tag, User
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -12,7 +13,7 @@ class TagSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = '__all__'
-        model = Tags
+        model = Tag
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -24,7 +25,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = '__all__'
-        model = Ingredients
+        model = Ingredient
 
 
 class RecipeSerializer(serializers.Serializer):
@@ -41,4 +42,27 @@ class RecipeSerializer(serializers.Serializer):
 
     class Meta:
         fields = '__all__'
-        model = Recipes
+        model = Recipe
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор модели User."""
+
+    class Meta:
+        fields = '__all__'
+        model = User
+
+    def validate(self, data):
+        if data.get('username') == NON_VALID_USERNAME:
+            raise serializers.ValidationError(
+                f'Использовать имя "{NON_VALID_USERNAME}" запрещено'
+            )
+        if User.objects.filter(username=data.get('username')).exists():
+            raise serializers.ValidationError(
+                'Пользователь с таким username уже существует'
+            )
+        if User.objects.filter(email=data.get('email')).exists():
+            raise serializers.ValidationError(
+                'Пользователь с таким email уже существует'
+            )
+        return data
