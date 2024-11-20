@@ -1,22 +1,26 @@
-
-from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from django.urls import reverse
-from rest_framework import filters, status, viewsets
-from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.permissions import (AllowAny, IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
+from djoser.conf import settings
+from djoser.views import UserViewSet as djoser_user
+from rest_framework import status, viewsets
+from rest_framework.decorators import action, permission_classes
+from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
 
 from api.serializers import (
+    FavoriteRecipeSerializer,
     IngredientSerializer,
     RecipeSerializer,
     TagSerializer,
+    UserAvatarSerializer,
     UserSerializer,
+    ShoppingBusketSerializer
 )
-from api.filters import IngredientFilterSet
-from recipes.models import Ingredient, Recipe, Tag, User
+from api.filters import IngredientFilterSet, RecipeFilterSet
+from api.pagination import FoodgramPagination
+from recipes.models import FavoriteRecipe, Ingredient, Recipe, Tag, User, ShoppingBusket
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -24,6 +28,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
+    filterset_class = RecipeFilterSet
+    pagination_class = FoodgramPagination
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
     @action(detail=True, url_path='get-link')
     def get_recipe_link(self, request, pk=None):
@@ -72,36 +81,31 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_class = IngredientFilterSet
 
 
-class UserViewSet(viewsets.ReadOnlyModelViewSet):
+class UserViewSet(djoser_user):
     """Вьюсет для модели User."""
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    pagination_class = LimitOffsetPagination
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            if settings.USER_CREATE_PASSWORD_RETYPE:
+                return settings.SERIALIZERS.user_create_password_retype
+            return settings.SERIALIZERS.user_create
+        if self.action == "set_password":
+            if settings.SET_PASSWORD_RETYPE:
+                return settings.SERIALIZERS.set_password_retype
+            return settings.SERIALIZERS.set_password
+        return self.serializer_class
 
     @action(
         detail=False,
-        url_path='me',
-        permission_classes=(IsAuthenticated, )
+        methods=['GET'],
+        url_path='me'
     )
-    def profile_update(self, request):
-        serializer = UserSerializer(self.request.user)
-        if request.method == 'PATCH':
-            serializer = UserSerializer(
-                request.user, data=request.data, partial=True
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save(role=request.user.role)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    @action(
-        detail=False,
-        url_path='set_password',
-        methods=['POST'],
-        permission_classes=(IsAuthenticated, )
-    )
-    def set_password(self, request):
-        pass
+    def get_profile(self, request):
+        return super().me(request, *args, **kwargs)
 
     @action(
         detail=False,
@@ -110,6 +114,21 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     )
     def get_all_subscriptions(self, request):
         pass
+
+    @action(
+        detail=False,
+        methods=['PUT'],
+        url_path='me/avatar'
+    )
+    def set_avatar(self, request):
+        instance = self.get_instance()
+        serializer = UserAvatarSerializer(
+            instance, 
+            data=request.data
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return serializer
 
     @action(
         detail=True,
@@ -128,3 +147,13 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     )
     def unsubscribe(self, request, pk=None):
         pass
+
+
+class FavoriteRecipeViewset(viewsets.ModelViewSet):
+    queryset = FavoriteRecipe.objects.all()
+    serializer_class = FavoriteRecipeSerializer
+
+
+class ShoppingBusketViewset(viewsets.ModelViewSet):
+    queryset = ShoppingBusket.objects.all()
+    serializer_class = ShoppingBusketSerializer
