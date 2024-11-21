@@ -12,7 +12,5 @@ def username_validator(value):
             f'Имя пользователя "{NON_VALID_USERNAME}" использовать нельзя!'
         )
     elif value in unmatched:
-        raise ValidationError(
-            f"Имя пользователя не должно содержать {unmatched}"
-        )
+        raise ValidationError(f"Имя пользователя не должно содержать {unmatched}")
     return value

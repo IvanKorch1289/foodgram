@@ -12,9 +12,9 @@ MIN_AMOUNT_VALUE = 1
 DEFAULT_PAGE_SIZE = 10
 MAX_PAGE_SIZE = 100
 
-USER_NAME_REGEX = r'^[\w.@+-]+\Z'
-NON_VALID_USERNAME = r'me'
+USER_NAME_REGEX = r"^[\w.@+-]+\Z"
+NON_VALID_USERNAME = r"me"
 
 FILES = {
-    'ingredients': 'ingredients.csv',
+    "ingredients": "ingredients.csv",
 }

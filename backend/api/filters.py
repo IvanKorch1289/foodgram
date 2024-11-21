@@ -3,7 +3,6 @@ from django_filters.rest_framework import (
     BooleanFilter,
     CharFilter,
     FilterSet,
-    DjangoFilterBackend,
     ModelMultipleChoiceFilter,
 )
 
@@ -13,11 +12,11 @@ from recipes.models import Ingredient, Recipe, Tag
 class IngredientFilterSet(FilterSet):
     """Фильтр для модели Ingredient."""
 
-    name = CharFilter(lookup_expr='istartswith')
+    name = CharFilter(lookup_expr="istartswith")
 
     class Meta:
         model = Ingredient
-        fields = ('name', )
+        fields = ("name",)
 
 
 class RecipeFilterSet(FilterSet):
@@ -25,16 +24,14 @@ class RecipeFilterSet(FilterSet):
 
     author = AllValuesMultipleFilter(field_name="author")
     tags = ModelMultipleChoiceFilter(
-        field_name='tags__slug',
-        to_field_name='slug',
-        queryset=Tag.objects.all()
+        field_name="tags__slug", to_field_name="slug", queryset=Tag.objects.all()
     )
-    is_favorited = BooleanFilter(method='filter_is_favorited')
-    is_in_shopping_cart = BooleanFilter(method='filter_is_in_shopping_cart')
+    is_favorited = BooleanFilter(method="filter_is_favorited")
+    is_in_shopping_cart = BooleanFilter(method="filter_is_in_shopping_cart")
 
     class Meta:
         model = Recipe
-        fields = ['author', 'tags']
+        fields = ["author", "tags"]
 
     def filter_is_favorited(self, queryset, value):
         if value:
