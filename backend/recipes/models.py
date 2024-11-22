@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinLengthValidator, MinValueValidator
 from django.db import models
+
 from recipes.constants import (MAX_LENGTH_32_CHAR_FIELD,
                                MAX_LENGTH_64_CHAR_FIELD,
                                MAX_LENGTH_128_CHAR_FIELD,
@@ -16,7 +17,7 @@ class User(AbstractUser):
         help_text="Пароль",
         validators=[MinLengthValidator(8), validate_username],
     )
-    avatar = models.ImageField("Аватар", upload_to="avatars/", blank=True, null=True)
+    avatar = models.ImageField("Аватар", upload_to="static/", blank=True, null=True)
     email = models.CharField(
         max_length=MAX_LENGTH_EMAIL,
         unique=True,
@@ -34,7 +35,7 @@ class User(AbstractUser):
         ordering = ["username"]
 
 
-class BaseFieldModel(models.Model):
+class IdDateFieldModel(models.Model):
 
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -50,20 +51,20 @@ class BaseFieldModel(models.Model):
         return self.name
 
 
-class Tag(BaseFieldModel):
+class Tag(IdDateFieldModel):
 
     name = models.CharField(
         max_length=MAX_LENGTH_32_CHAR_FIELD, help_text="Наименование", db_index=True
     )
     slug = models.SlugField()
 
-    class Meta(BaseFieldModel.Meta):
+    class Meta(IdDateFieldModel.Meta):
         default_related_name = "tags"
         verbose_name = "Тег"
         verbose_name_plural = "Теги"
 
 
-class Ingredient(BaseFieldModel):
+class Ingredient(IdDateFieldModel):
 
     name = models.CharField(
         max_length=MAX_LENGTH_128_CHAR_FIELD, help_text="Наименование", db_index=True
@@ -73,14 +74,14 @@ class Ingredient(BaseFieldModel):
         max_length=MAX_LENGTH_64_CHAR_FIELD, help_text="Единица измерения"
     )
 
-    class Meta(BaseFieldModel.Meta):
+    class Meta(IdDateFieldModel.Meta):
         default_related_name = "ingredients"
         verbose_name = "Ингредиент"
         verbose_name_plural = "Ингредиенты"
         unique_together = ("name", "measurement_unit")
 
 
-class Recipe(BaseFieldModel):
+class Recipe(IdDateFieldModel):
 
     name = models.CharField(
         max_length=MAX_LENGTH_256_CHAR_FIELD, help_text="Наименование", db_index=True
@@ -115,7 +116,7 @@ class Recipe(BaseFieldModel):
     )
     tags = models.ManyToManyField(Tag, verbose_name="Список тегов")
 
-    class Meta(BaseFieldModel.Meta):
+    class Meta(IdDateFieldModel.Meta):
         default_related_name = "recipes"
         verbose_name = "Рецепт"
         verbose_name_plural = "Рецепты"
@@ -149,37 +150,39 @@ class RecipeIngredient(models.Model):
         verbose_name_plural = "Ингредиенты в рецепте"
 
 
-class FavouriteRecipe(models.Model):
+class RecipeUserFieldModel(models.Model):
 
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, verbose_name="Отметивший пользователь"
-    )
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, verbose_name="Рецепты")
-
-    class Meta:
-        default_related_name = "favorite_recipe"
-        verbose_name = "Избранные рецепты"
-        verbose_name_plural = "Избранные рецепты"
-        constraints = [
-            models.UniqueConstraint(fields=["user", "recipe"], name="unique_favorite")
-        ]
-
-
-class ShoppingBusket(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, verbose_name="Пользователь"
     )
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, verbose_name="Рецепты")
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, verbose_name="Рецепт")
 
     class Meta:
+        abstract = True
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "recipe"], name=f"%(app_label)s_%(class)s_user_recipe"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.recipe.name}"
+
+
+class FavouriteRecipe(RecipeUserFieldModel):
+
+    class Meta(RecipeUserFieldModel.Meta):
+        default_related_name = "favorite_recipe"
+        verbose_name = "Избранный рецепт"
+        verbose_name_plural = "Избранные рецепты"
+
+
+class ShoppingBusket(RecipeUserFieldModel):
+
+    class Meta(RecipeUserFieldModel.Meta):
         default_related_name = "shopping_bucket"
         verbose_name = "Корзина"
         verbose_name_plural = "Корзины"
-        constraints = [
-            models.UniqueConstraint(
-                fields=["user", "recipe"], name="unique_shopping_cart"
-            )
-        ]
 
 
 class Follow(models.Model):
