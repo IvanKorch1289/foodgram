@@ -1,18 +1,9 @@
-from rest_framework import serializers, status
-from rest_framework.response import Response
-
 from api.custom_fields import Base64ImageField
 from recipes.constants import NON_VALID_USERNAME
-from recipes.models import (
-    FavouriteRecipe,
-    Follow,
-    Ingredient,
-    Recipe,
-    RecipeIngredient,
-    ShoppingBusket,
-    Tag,
-    User,
-)
+from recipes.models import (FavouriteRecipe, Follow, Ingredient, Recipe,
+                            RecipeIngredient, ShoppingBusket, Tag, User)
+from rest_framework import serializers, status
+from rest_framework.response import Response
 
 
 class TagSerializer(serializers.ModelSerializer):

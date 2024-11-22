@@ -1,34 +1,20 @@
+from api.filters import IngredientFilterSet, RecipeFilterSet
+from api.pagination import FoodgramPagination
+from api.serializers import (FavouriteRecipeSerializer, FollowSerializer,
+                             IngredientSerializer, RecipeSerializer,
+                             ShoppingBusketSerializer, TagSerializer,
+                             UserAvatarSerializer, UserSerializer)
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.conf import settings
 from djoser.views import UserViewSet as djoser_user
+from recipes.models import (FavouriteRecipe, Follow, Ingredient, Recipe,
+                            ShoppingBusket, Tag, User)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-
-from api.filters import IngredientFilterSet, RecipeFilterSet
-from api.pagination import FoodgramPagination
-from api.serializers import (
-    FavouriteRecipeSerializer,
-    FollowSerializer,
-    IngredientSerializer,
-    RecipeSerializer,
-    ShoppingBusketSerializer,
-    TagSerializer,
-    UserAvatarSerializer,
-    UserSerializer,
-)
-from recipes.models import (
-    FavouriteRecipe,
-    Follow,
-    Ingredient,
-    Recipe,
-    ShoppingBusket,
-    Tag,
-    User,
-)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
