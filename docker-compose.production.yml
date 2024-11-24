@@ -27,7 +27,7 @@ services:
     image: crazyivan1289/foodgram_gateway
     env_file: .env
     ports:
-      - 9090:80
+      - 9000:80
     depends_on:
       - backend
       - frontend
