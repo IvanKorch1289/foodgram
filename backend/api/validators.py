@@ -1,7 +1,6 @@
 import re
 
 from django.core.exceptions import ValidationError
-
 from recipes.constants import NON_VALID_USERNAME, USER_NAME_REGEX
 
 

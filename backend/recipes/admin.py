@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.shortcuts import get_object_or_404
-
 from recipes.constants import SHORT_TITLE
 from recipes.models import Ingredient, Recipe, Tag, User
 

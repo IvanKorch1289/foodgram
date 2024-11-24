@@ -1,7 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinLengthValidator, MinValueValidator
 from django.db import models
-
 from recipes.constants import (MAX_LENGTH_32_CHAR_FIELD,
                                MAX_LENGTH_64_CHAR_FIELD,
                                MAX_LENGTH_128_CHAR_FIELD,

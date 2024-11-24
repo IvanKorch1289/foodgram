@@ -1,25 +1,25 @@
 from collections import defaultdict
 from io import StringIO
 
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
-from django.urls import reverse
-from django_filters.rest_framework import DjangoFilterBackend
-from djoser.conf import settings
-from djoser.views import UserViewSet as djoser_user
-from rest_framework import status, viewsets
-from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-
 from api.filters import IngredientFilterSet, RecipeFilterSet
 from api.pagination import FoodgramPagination
 from api.serializers import (FavouriteRecipeSerializer, FollowSerializer,
                              IngredientSerializer, RecipeSerializer,
                              ShoppingBusketSerializer, TagSerializer,
                              UserAvatarSerializer, UserSerializer)
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from djoser.conf import settings
+from djoser.views import UserViewSet as djoser_user
+from pyshorteners import Shortener
 from recipes.models import (FavouriteRecipe, Follow, Ingredient, Recipe,
                             ShoppingBusket, Tag, User)
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.reverse import reverse
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -34,14 +34,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
 
     @action(detail=True, url_path="get-link")
-    def get_recipe_link(self, request, pk=None):
-        original_url = request.META.get("HTTP_REFERER")
-        if original_url is None:
-            url = reverse("api:recipe-detail", kwargs={"pk": pk})
-            original_url = request.build_absolute_uri(url)
-        data = {}
-        data["short-link"] = original_url
-        return Response(data)
+    def get_short_link(self, request, pk=None):
+        detail_url = reverse("recipes-detail", args=[pk], request=request)
+        full_url = request.build_absolute_uri(detail_url)
+        shortener = Shortener()
+        shortened_url = shortener.tinyurl.short(full_url)
+        return Response({"shortened_url": shortened_url})
 
     @action(detail=True, methods=["POST", "DELETE"], url_path="shopping_cart")
     def shopping_cart(self, request, pk=None):
