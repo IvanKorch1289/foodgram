@@ -188,12 +188,15 @@ class RecipeUserFieldModel(models.Model):
 
     class Meta:
         abstract = True
-        constraints = [
+
+    def set_constraints(self):
+        model = type(self)
+        model._meta.constraints.append(
             models.UniqueConstraint(
-                fields=["user", "recipe"],
-                name=f"%(app_label)s_%(class)s_user_recipe"
+                fields=['user', 'recipe'],
+                name=f'{model._meta.app_label}_{model.__name__}_user_recipe'
             )
-        ]
+        )
 
     def __str__(self):
         return f"{self.user.username} - {self.recipe.name}"
@@ -240,3 +243,7 @@ class Follow(models.Model):
                 name="unique_subscriber_himself",
             ),
         ]
+
+
+ShoppingBusket.set_constraints()
+FavouriteRecipe.set_constraints()

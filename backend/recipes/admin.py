@@ -1,7 +1,7 @@
 from django.contrib.auth.admin import UserAdmin, admin
 from django.utils.html import format_html
+from recipes.models import Ingredient, Recipe, Tag, User
 
-from recipes.models import User, Recipe, Ingredient, Tag
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
@@ -16,7 +16,11 @@ class RecipeAdmin(admin.ModelAdmin):
 
     def favorites_count(self, obj):
         count = obj.favorited_by.count()
-        return format_html(f'<span style="color: green;">Добавлений в избранное: {count}</span>')
+        return format_html(
+            '<span style="color: green;">'
+            'Добавлений в избранное: {}</span>',
+            count,
+        )
 
     favorites_count.short_description = 'Количество добавлений в избранное'
 
