@@ -197,6 +197,10 @@ class RecipeUserFieldModel(models.Model):
                 name=f'{model._meta.app_label}_{cls.__name__}_user_recipe'
             )
         )
+        
+    @classmethod
+    def setup(cls):
+        cls.set_constraints(cls)
 
     def __str__(self):
         return f"{self.user.username} - {self.recipe.name}"
@@ -245,5 +249,5 @@ class Follow(models.Model):
         ]
 
 
-ShoppingBusket.set_constraints()
-FavouriteRecipe.set_constraints()
+ShoppingBusket.setup()
+FavouriteRecipe.setup()
