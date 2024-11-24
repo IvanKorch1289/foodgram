@@ -189,12 +189,12 @@ class RecipeUserFieldModel(models.Model):
     class Meta:
         abstract = True
 
-    def set_constraints(self):
-        model = type(self)
+    @classmethod
+    def set_constraints(cls, model):
         model._meta.constraints.append(
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
-                name=f'{model._meta.app_label}_{model.__name__}_user_recipe'
+                name=f'{model._meta.app_label}_{cls.__name__}_user_recipe'
             )
         )
 
