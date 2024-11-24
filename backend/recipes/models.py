@@ -197,7 +197,7 @@ class RecipeUserFieldModel(models.Model):
                 name=f'{model._meta.app_label}_{cls.__name__}_user_recipe'
             )
         )
-        
+
     @classmethod
     def setup(cls):
         cls.set_constraints(cls)
