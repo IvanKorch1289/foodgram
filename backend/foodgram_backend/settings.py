@@ -10,7 +10,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("SECRET_KEY", default=get_random_secret_key())
 
-
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", default="127.0.0.1, localhost").split(",")
 
 
@@ -24,7 +23,6 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "djoser",
-    "drf_api_logger",
     "recipes.apps.RecipesConfig",
     "api.apps.ApiConfig",
 ]
@@ -37,7 +35,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "drf_api_logger.middleware.api_logger_middleware.APILoggerMiddleware",
 ]
 
 ROOT_URLCONF = "foodgram_backend.urls"
@@ -63,10 +60,6 @@ WSGI_APPLICATION = "foodgram_backend.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    },
-    "production": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.getenv("POSTGRES_DB", "foodgram"),
         "USER": os.getenv("POSTGRES_USER", "foodgram_user"),
@@ -127,7 +120,6 @@ DJOSER = {
     },
 }
 
-DRF_API_LOGGER_DATABASE = True
 
 LOGGING = {
     "version": 1,

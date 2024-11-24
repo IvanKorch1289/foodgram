@@ -41,12 +41,19 @@ class RecipeViewSet(viewsets.ModelViewSet):
         shortened_url = shortener.tinyurl.short(full_url)
         return Response({"shortened_url": shortened_url})
 
-    @action(detail=True, methods=["POST", "DELETE"], url_path="shopping_cart")
+    @action(
+        detail=True,
+        methods=["POST", "DELETE"],
+        url_path="shopping_cart",
+        permission_classes=(IsAuthenticated,)
+    )
     def shopping_cart(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
         user = request.user
         if request.method == "POST":
-            if ShoppingBusket.objects.filter(recipe=recipe, user=user).exists():
+            if ShoppingBusket.objects.filter(
+                recipe=recipe, user=user
+            ).exists():
                 return Response(
                     {"error": "Рецепт уже добавлен в корзину."},
                     status=status.HTTP_409_CONFLICT,
@@ -59,7 +66,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == "DELETE":
             try:
-                busket = get_object_or_404(ShoppingBusket, user=user, recipe=recipe)
+                busket = get_object_or_404(
+                    ShoppingBusket, user=user, recipe=recipe
+                )
                 busket.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
             except Exception as ex:
@@ -69,7 +78,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         detail=False,
         methods=["GET"],
         url_path="download_shopping_cart",
-        permission_classes=(IsAuthenticated,),
+        permission_classes=(IsAuthenticated,)
     )
     def download_shopping_list(self, request):
         shopping_buskets = ShoppingBusket.objects.filter(
@@ -85,15 +94,23 @@ class RecipeViewSet(viewsets.ModelViewSet):
         file_buffer.seek(0)
         file_content = file_buffer.read()
         header = {"Content-Disposition": 'attachment; filename="foodgram.txt"'}
-        return HttpResponse(file_content, content_type="text/plain", headers=header)
+        return HttpResponse(
+            file_content, content_type="text/plain", headers=header
+        )
 
-    @action(detail=True, methods=["POST", "DELETE"], url_path="favorite")
+    @action(
+        detail=True,
+        methods=["POST", "DELETE"],
+        url_path="favorite",
+        permission_classes=(IsAuthenticated,)
+    )
     def favorite(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
         user = request.user
-        print({"user": user.id, "id": recipe.id})
         if request.method == "POST":
-            if FavouriteRecipe.objects.filter(user=user, recipe=recipe).exists():
+            if FavouriteRecipe.objects.filter(
+                user=user, recipe=recipe
+            ).exists():
                 return Response(
                     {"error": "Рецепт уже добавлен в избранное."},
                     status=status.HTTP_409_CONFLICT,
@@ -106,7 +123,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == "DELETE":
             try:
-                favourite = get_object_or_404(FavouriteRecipe, user=user, recipe=recipe)
+                favourite = get_object_or_404(
+                    FavouriteRecipe, user=user, recipe=recipe
+                )
                 favourite.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
             except Exception as ex:
@@ -151,7 +170,12 @@ class UserViewSet(djoser_user):
     def get_profile(self, request):
         return super().me(request)
 
-    @action(detail=False, methods=["PUT", "DELETE"], url_path="me/avatar")
+    @action(
+        detail=False,
+        methods=["PUT", "DELETE"],
+        url_path="me/avatar",
+        permission_classes=(IsAuthenticated,)
+    )
     def avatar(self, request):
         user = request.user
         if request.method == "PUT":
@@ -170,7 +194,7 @@ class UserViewSet(djoser_user):
         detail=False,
         methods=["GET"],
         url_path="subscriptions",
-        permission_classes=(IsAuthenticated,),
+        permission_classes=(IsAuthenticated,)
     )
     def get_all_subscriptions(self, request):
         follows = request.user.following.all()
@@ -187,23 +211,28 @@ class UserViewSet(djoser_user):
                     recipes = recipes[:recipes_limit]
         page = self.paginate_queryset(follows)
         if page is not None:
-            serializer = FollowSerializer(page, many=True, context={"request": request})
+            serializer = FollowSerializer(
+                page, many=True, context={"request": request}
+            )
             return self.get_paginated_response(serializer.data)
 
-        serializer = FollowSerializer(follows, many=True, context={"request": request})
+        serializer = FollowSerializer(
+            follows, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(
         detail=True,
         methods=["POST", "DELETE"],
         url_path="subscribe",
-        permission_classes=(IsAuthenticated,),
+        permission_classes=(IsAuthenticated,)
     )
     def subscribe(self, request, pk=None):
         author = get_object_or_404(User, pk=pk)
         user = request.user
         if request.method == "POST":
-            serializer = FollowSerializer(data={"user": user.id, "author": author.id})
+            serializer = FollowSerializer(
+                data={"user": user.id, "author": author.id}
+            )
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)

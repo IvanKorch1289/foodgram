@@ -65,9 +65,15 @@ class UserAvatarSerializer(serializers.ModelSerializer):
 
 class FollowSerializer(serializers.ModelSerializer):
 
-    author = serializers.SlugRelatedField(queryset=User.objects.all(), slug_field="id")
+    author = serializers.SlugRelatedField(
+        queryset=User.objects.all(),
+        slug_field="id")
+
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.IntegerField(source="recipes.count", read_only=True)
+    recipes_count = serializers.IntegerField(
+        source="recipes.count",
+        read_only=True
+    )
 
     class Meta:
         model = Follow
@@ -78,7 +84,9 @@ class FollowSerializer(serializers.ModelSerializer):
         author = attrs.get("author")
 
         if Follow.objects.filter(user=user, author=author).exists():
-            raise serializers.ValidationError("Вы уже подписаны на этого автора.")
+            raise serializers.ValidationError(
+                "Вы уже подписаны на этого автора."
+            )
         return super().validate(attrs)
 
     def get_recipes(self, obj):
@@ -93,7 +101,10 @@ class FollowSerializer(serializers.ModelSerializer):
         return serializer.data
 
     def to_representation(self, instance):
-        representation = UserSerializer(instance.user, context=self.context).data
+        representation = UserSerializer(
+            instance.user,
+            context=self.context
+        ).data
         recipes_data = self.get_recipes(instance)
         for recipe in recipes_data:
             del recipe["ingredients"]
@@ -135,7 +146,10 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         recipe_ingredient = instance.recipe_ingredients.first()
-        representation = {"id": instance.id, "amount": recipe_ingredient.amount}
+        representation = {
+            "id": instance.id,
+            "amount": recipe_ingredient.amount
+        }
         return representation
 
 
@@ -143,7 +157,10 @@ class RecipeSerializer(serializers.ModelSerializer):
     """Сериализатор модели Recipes."""
 
     ingredients = RecipeIngredientSerializer(many=True)
-    tags = serializers.PrimaryKeyRelatedField(many=True, queryset=Tag.objects.all())
+    tags = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Tag.objects.all()
+    )
     image = Base64ImageField()
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
@@ -196,7 +213,10 @@ class RecipeSerializer(serializers.ModelSerializer):
 class BusketFavouriteReprentSerializer(serializers.Serializer):
 
     def to_representation(self, instance):
-        representation = RecipeSerializer(instance.recipe, context=self.context).data
+        representation = RecipeSerializer(
+            instance.recipe,
+            context=self.context
+        ).data
         del representation["ingredients"]
         del representation["tags"]
         del representation["is_favorited"]
@@ -211,10 +231,7 @@ class ShoppingBusketSerializer(
 ):
     class Meta:
         model = ShoppingBusket
-        fields = (
-            "user",
-            "recipe",
-        )
+        fields = ("user", "recipe")
 
 
 class FavouriteRecipeSerializer(
@@ -223,7 +240,4 @@ class FavouriteRecipeSerializer(
 
     class Meta:
         model = FavouriteRecipe
-        fields = (
-            "user",
-            "recipe",
-        )
+        fields = ("user", "recipe",)

@@ -16,7 +16,12 @@ class User(AbstractUser):
         help_text="Пароль",
         validators=[MinLengthValidator(8), validate_username],
     )
-    avatar = models.ImageField("Аватар", upload_to="static/", blank=True, null=True)
+    avatar = models.ImageField(
+        "Аватар",
+        upload_to="static/",
+        blank=True,
+        null=True
+    )
     email = models.CharField(
         max_length=MAX_LENGTH_EMAIL,
         unique=True,
@@ -53,7 +58,9 @@ class IdDateFieldModel(models.Model):
 class Tag(IdDateFieldModel):
 
     name = models.CharField(
-        max_length=MAX_LENGTH_32_CHAR_FIELD, help_text="Наименование", db_index=True
+        max_length=MAX_LENGTH_32_CHAR_FIELD,
+        help_text="Наименование",
+        db_index=True
     )
     slug = models.SlugField()
 
@@ -66,11 +73,14 @@ class Tag(IdDateFieldModel):
 class Ingredient(IdDateFieldModel):
 
     name = models.CharField(
-        max_length=MAX_LENGTH_128_CHAR_FIELD, help_text="Наименование", db_index=True
+        max_length=MAX_LENGTH_128_CHAR_FIELD,
+        help_text="Наименование",
+        db_index=True
     )
 
     measurement_unit = models.CharField(
-        max_length=MAX_LENGTH_64_CHAR_FIELD, help_text="Единица измерения"
+        max_length=MAX_LENGTH_64_CHAR_FIELD,
+        help_text="Единица измерения"
     )
 
     class Meta(IdDateFieldModel.Meta):
@@ -83,16 +93,23 @@ class Ingredient(IdDateFieldModel):
 class Recipe(IdDateFieldModel):
 
     name = models.CharField(
-        max_length=MAX_LENGTH_256_CHAR_FIELD, help_text="Наименование", db_index=True
+        max_length=MAX_LENGTH_256_CHAR_FIELD,
+        help_text="Наименование",
+        db_index=True
     )
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, verbose_name="Автор рецепта"
+        User,
+        on_delete=models.CASCADE,
+        verbose_name="Автор рецепта"
     )
     ingredients = models.ManyToManyField(
-        Ingredient, verbose_name="Ингредиенты", through="RecipeIngredient"
+        Ingredient,
+        verbose_name="Ингредиенты",
+        through="RecipeIngredient"
     )
     is_in_shopping_cart = models.BooleanField(
-        default=False, help_text="Находится ли в корзине"
+        default=False,
+        help_text="Находится ли в корзине"
     )
     text = models.CharField(
         help_text="Текст рецепта",
@@ -106,12 +123,16 @@ class Recipe(IdDateFieldModel):
         null=True,
         validators=[
             MinValueValidator(
-                MIN_DURATION_VALUE, message="Значение не может быть меньше 1 минуты"
+                MIN_DURATION_VALUE,
+                message="Значение не может быть меньше 1 минуты"
             )
         ],
     )
     image = models.ImageField(
-        upload_to="static/", blank=True, null=True, help_text="Изображение"
+        upload_to="static/",
+        blank=True,
+        null=True,
+        help_text="Изображение"
     )
     tags = models.ManyToManyField(Tag, verbose_name="Список тегов")
 
@@ -125,7 +146,9 @@ class Recipe(IdDateFieldModel):
 class RecipeIngredient(models.Model):
 
     ingredient = models.ForeignKey(
-        Ingredient, on_delete=models.PROTECT, verbose_name="Ингредиент"
+        Ingredient,
+        on_delete=models.PROTECT,
+        verbose_name="Ингредиент"
     )
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     amount = models.PositiveSmallIntegerField(
@@ -142,7 +165,8 @@ class RecipeIngredient(models.Model):
         default_related_name = "recipe_ingredients"
         constraints = [
             models.UniqueConstraint(
-                fields=["ingredient", "recipe"], name="unique ingredient"
+                fields=["ingredient", "recipe"],
+                name="unique ingredient"
             )
         ]
         verbose_name = "Ингредиент в рецепте"
@@ -152,15 +176,22 @@ class RecipeIngredient(models.Model):
 class RecipeUserFieldModel(models.Model):
 
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, verbose_name="Пользователь"
+        User,
+        on_delete=models.CASCADE,
+        verbose_name="Пользователь"
     )
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, verbose_name="Рецепт")
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        verbose_name="Рецепт"
+    )
 
     class Meta:
         abstract = True
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "recipe"], name=f"%(app_label)s_%(class)s_user_recipe"
+                fields=["user", "recipe"],
+                name=f"%(app_label)s_%(class)s_user_recipe"
             )
         ]
 
@@ -185,15 +216,24 @@ class ShoppingBusket(RecipeUserFieldModel):
 
 
 class Follow(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="following")
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="follower")
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="following"
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="follower"
+    )
 
     class Meta:
         verbose_name = "Подписка"
         verbose_name_plural = "Подписки"
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "author"], name="unique_subscriber"
+                fields=["user", "author"],
+                name="unique_subscriber"
             ),
             models.CheckConstraint(
                 check=~models.Q(user=models.F("author")),
