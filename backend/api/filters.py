@@ -1,8 +1,11 @@
-from django_filters.rest_framework import (AllValuesMultipleFilter,
-                                           BooleanFilter, CharFilter,
-                                           FilterSet,
-                                           ModelMultipleChoiceFilter)
-from recipes.models import Ingredient, Recipe, Tag
+from django_filters.rest_framework import (
+    BooleanFilter,
+    CharFilter,
+    FilterSet,
+    ModelChoiceFilter,
+    ModelMultipleChoiceFilter
+)
+from recipes.models import Ingredient, Recipe, Tag, User
 
 
 class IngredientFilterSet(FilterSet):
@@ -18,7 +21,10 @@ class IngredientFilterSet(FilterSet):
 class RecipeFilterSet(FilterSet):
     """Фильтр для модели Recipe."""
 
-    author = AllValuesMultipleFilter(field_name="author")
+    author = ModelChoiceFilter(
+        field_name="author",
+        to_field_name="id",
+        queryset=User.objects.all())
     tags = ModelMultipleChoiceFilter(
         field_name="tags__slug",
         to_field_name="slug",
@@ -31,14 +37,14 @@ class RecipeFilterSet(FilterSet):
         model = Recipe
         fields = ["author", "tags"]
 
-    def filter_is_favorited(self, queryset, value):
-        if value:
+    def filter_is_favorited(self, queryset, name, value):
+        if value and self.request.user.is_authenticated:
             user = self.request.user
-            return queryset.filter(favorites__user=user)
+            return queryset.filter(favorite_recipe__user=user)
         return queryset
 
-    def filter_is_in_shopping_cart(self, queryset, value):
-        if value:
+    def filter_is_in_shopping_cart(self, queryset, name, value):
+        if value and self.request.user.is_authenticated:
             user = self.request.user
-            return queryset.filter(shopping_list__user=user)
+            return queryset.filter(shopping_bucket__user=user)
         return queryset

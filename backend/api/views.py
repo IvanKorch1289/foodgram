@@ -1,25 +1,30 @@
 from collections import defaultdict
 from io import StringIO
 
-from api.filters import IngredientFilterSet, RecipeFilterSet
-from api.pagination import FoodgramPagination
-from api.serializers import (FavouriteRecipeSerializer, FollowSerializer,
-                             IngredientSerializer, RecipeSerializer,
-                             ShoppingBusketSerializer, TagSerializer,
-                             UserAvatarSerializer, UserSerializer)
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.conf import settings
 from djoser.views import UserViewSet as djoser_user
 from pyshorteners import Shortener
-from recipes.models import (FavouriteRecipe, Follow, Ingredient, Recipe,
-                            ShoppingBusket, Tag, User)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import (
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly
+)
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
+
+from api.filters import IngredientFilterSet, RecipeFilterSet
+from api.permissions import IsOwnerOrReadOnly, IsAuthorOrReadOnly
+from api.pagination import FoodgramPagination
+from api.serializers import (FavouriteRecipeSerializer, FollowSerializer,
+                             IngredientSerializer, RecipeSerializer,
+                             ShoppingBusketSerializer, TagSerializer,
+                             UserAvatarSerializer, UserSerializer)
+from recipes.models import (FavouriteRecipe, Follow, Ingredient, Recipe,
+                            ShoppingBusket, Tag, User)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -28,10 +33,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
     filterset_class = RecipeFilterSet
+    filter_backends = [DjangoFilterBackend]
     pagination_class = FoodgramPagination
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly)
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
 
     @action(detail=True, url_path="get-link")
     def get_short_link(self, request, pk=None):
@@ -39,7 +47,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         full_url = request.build_absolute_uri(detail_url)
         shortener = Shortener()
         shortened_url = shortener.tinyurl.short(full_url)
-        return Response({"shortened_url": shortened_url})
+        return Response({"short-link": shortened_url})
 
     @action(
         detail=True,
@@ -51,15 +59,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         recipe = get_object_or_404(Recipe, pk=pk)
         user = request.user
         if request.method == "POST":
-            if ShoppingBusket.objects.filter(
-                recipe=recipe, user=user
-            ).exists():
-                return Response(
-                    {"error": "Рецепт уже добавлен в корзину."},
-                    status=status.HTTP_409_CONFLICT,
-                )
             serializer = ShoppingBusketSerializer(
-                data={"user": user.id, "recipe": recipe.id}
+                data={"user": user.id, "recipe": recipe.id},
+                context={"request": request}
             )
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -108,15 +110,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         recipe = get_object_or_404(Recipe, pk=pk)
         user = request.user
         if request.method == "POST":
-            if FavouriteRecipe.objects.filter(
-                user=user, recipe=recipe
-            ).exists():
-                return Response(
-                    {"error": "Рецепт уже добавлен в избранное."},
-                    status=status.HTTP_409_CONFLICT,
-                )
             serializer = FavouriteRecipeSerializer(
-                data={"user": user.id, "recipe": recipe.id}
+                data={"user": user.id, "recipe": recipe.id},
+                context={"request": request}
             )
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -154,6 +150,12 @@ class UserViewSet(djoser_user):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = FoodgramPagination
+    permission_classes = (IsOwnerOrReadOnly, )
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({'request': self.request})
+        return context
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -166,7 +168,12 @@ class UserViewSet(djoser_user):
             return settings.SERIALIZERS.set_password
         return self.serializer_class
 
-    @action(detail=False, methods=["GET"], url_path="me")
+    @action(
+        detail=False,
+        methods=["GET"],
+        url_path="me",
+        permission_classes=(IsAuthenticated, )
+    )
     def get_profile(self, request):
         return super().me(request)
 
@@ -226,15 +233,28 @@ class UserViewSet(djoser_user):
         url_path="subscribe",
         permission_classes=(IsAuthenticated,)
     )
-    def subscribe(self, request, pk=None):
-        author = get_object_or_404(User, pk=pk)
+    def subscribe(self, request, id=None):
+        author = get_object_or_404(User, pk=id)
         user = request.user
-        if request.method == "POST":
+        if request.method == 'POST':
+            recipes_limit = request.query_params.get('recipes_limit')
+            if recipes_limit is not None:
+                try:
+                    recipes_limit = int(recipes_limit)
+                except ValueError:
+                    recipes_limit = None
+
+            recipes = Recipe.objects.filter(author=author)
+            if recipes_limit:
+                recipes = recipes[:recipes_limit]
+
             serializer = FollowSerializer(
-                data={"user": user.id, "author": author.id}
+                data={'user': user.id, 'author': author.id},
+                context={"request": request}
             )
             serializer.is_valid(raise_exception=True)
             serializer.save()
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == "DELETE":
             try:
