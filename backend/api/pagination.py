@@ -1,6 +1,8 @@
-from recipes.constants import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
+
+from recipes.constants import DEFAULT_PAGE_SIZE
+from recipes.constants import MAX_PAGE_SIZE
 
 
 class FoodgramPagination(LimitOffsetPagination):

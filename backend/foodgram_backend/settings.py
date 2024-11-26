@@ -4,11 +4,10 @@ from pathlib import Path
 from django.core.management.utils import get_random_secret_key
 from dotenv import load_dotenv
 
-
 load_dotenv("./.env")
 
 
-ENVIRONMENT = os.environ.get('ENVIRONMENT', 'development')
+ENVIRONMENT = os.environ.get("ENVIRONMENT", "development")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -16,7 +15,7 @@ SECRET_KEY = os.getenv("SECRET_KEY", default=get_random_secret_key())
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", default="127.0.0.1, localhost").split(",")
 
-if ENVIRONMENT == 'production':
+if ENVIRONMENT == "production":
     DEBUG = False
 else:
     DEBUG = True
@@ -67,22 +66,22 @@ TEMPLATES = [
 WSGI_APPLICATION = "foodgram_backend.wsgi.application"
 
 
-if ENVIRONMENT == 'production':
+if ENVIRONMENT == "production":
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('DB_NAME', 'foodgram'),
-            'USER': os.getenv('DB_USER', 'foodgram_user'),
-            'PASSWORD': os.getenv('DB_PASSWORD', ''),
-            'HOST': os.getenv('DB_HOST', ''),
-            'PORT': os.getenv('DB_PORT', 5432),
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("DB_NAME", "foodgram"),
+            "USER": os.getenv("DB_USER", "foodgram_user"),
+            "PASSWORD": os.getenv("DB_PASSWORD", ""),
+            "HOST": os.getenv("DB_HOST", ""),
+            "PORT": os.getenv("DB_PORT", 5432),
         }
     }
 else:
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
         }
     }
 
