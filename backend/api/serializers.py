@@ -1,8 +1,9 @@
+
 from django.db.models import Prefetch
 from rest_framework import serializers
 
 from api.view_fields import Base64ImageField
-from recipes.constants import NON_VALID_USERNAME, MIN_AMOUNT_VALUE
+from recipes.constants import MIN_AMOUNT_VALUE, NON_VALID_USERNAME
 from recipes.models import (
     FavouriteRecipe,
     Follow,

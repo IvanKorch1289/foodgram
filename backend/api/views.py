@@ -1,6 +1,6 @@
 from django.http import HttpResponse
-from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as djoser_user
 from pyshorteners import Shortener
 from rest_framework import status, viewsets
@@ -23,7 +23,7 @@ from api.serializers import (
     UserAvatarSerializer,
     UserSerializer
 )
-from api.utils import write_to_file, call_serializer
+from api.utils import call_serializer, write_to_file
 from recipes.models import (
     FavouriteRecipe,
     Follow,
@@ -158,7 +158,6 @@ class UserViewSet(djoser_user):
     )
     def get_all_subscriptions(self, request):
         follows = request.user.following.all()
-        authors = follows.values_list("author", flat=True)
         page = self.paginate_queryset(follows)
         if page is not None:
             serializer = FollowSerializer(

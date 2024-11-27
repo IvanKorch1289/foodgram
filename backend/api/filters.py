@@ -4,8 +4,7 @@ from django_filters.rest_framework import (
     CharFilter,
     FilterSet
 )
-
-from recipes.models import (Ingredient, Recipe)
+from recipes.models import Ingredient, Recipe
 
 
 class IngredientFilterSet(FilterSet):

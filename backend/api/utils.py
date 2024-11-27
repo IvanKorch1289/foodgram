@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.response import Response
 
 from api.serializers import FavouriteRecipeSerializer, ShoppingBusketSerializer
-from recipes.models import Recipe, RecipeIngredient, ShoppingBusket
+from recipes.models import Recipe, ShoppingBusket
 
 
 def write_to_file(data):

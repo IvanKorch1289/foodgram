@@ -1,13 +1,7 @@
-from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.admin import admin
+from django.contrib.auth.admin import UserAdmin, admin
 from django.utils.html import format_html
 
-from recipes.models import (
-    Ingredient,
-    Recipe,
-    Tag,
-    User,
-)
+from recipes.models import Ingredient, Recipe, Tag, User
 
 
 @admin.register(Ingredient)

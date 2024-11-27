@@ -139,10 +139,14 @@
     ```
 
 ### Технологии
-Python 3.9.20,
-Django 3.2.3,
-Django Rest Framework 3.12.4, 
-PostgreSQL 13.10
+## Python 3.9.20,
+## Django 3.2.3,
+## Django Rest Framework 3.12.4, 
+## PostgreSQL 13.10
+
+### Ссылки
+[Адрес проекта](https://crazyivan1289.ddns.net/)
+[Документация API](https://crazyivan1289.ddns.net/api/docs)
 
 ### Автор
 [Ivan Korch - IvanKorch1289](https://github.com/IvanKorch1289)
