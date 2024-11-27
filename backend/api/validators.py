@@ -2,8 +2,7 @@ import re
 
 from django.core.exceptions import ValidationError
 
-from recipes.constants import NON_VALID_USERNAME
-from recipes.constants import USER_NAME_REGEX
+from recipes.constants import NON_VALID_USERNAME, USER_NAME_REGEX
 
 
 def username_validator(value):

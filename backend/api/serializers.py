@@ -1,16 +1,36 @@
 from django.db.models import Prefetch
 from rest_framework import serializers
 
-from api.custom_fields import Base64ImageField
-from recipes.constants import NON_VALID_USERNAME
-from recipes.models import FavouriteRecipe
-from recipes.models import Follow
-from recipes.models import Ingredient
-from recipes.models import Recipe
-from recipes.models import RecipeIngredient
-from recipes.models import ShoppingBusket
-from recipes.models import Tag
-from recipes.models import User
+from api.view_fields import Base64ImageField
+from recipes.constants import NON_VALID_USERNAME, MIN_AMOUNT_VALUE
+from recipes.models import (
+    FavouriteRecipe,
+    Follow,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    ShoppingBusket,
+    Tag,
+    User
+)
+
+
+def create_recipe_ingredients_and_set_tags(
+    recipe,
+    ingredients_data,
+    tags_data
+):
+    recipe_ingredients = [
+        RecipeIngredient(
+            recipe=recipe,
+            ingredient=ingredient['id'],
+            amount=ingredient['amount']
+        )
+        for ingredient in ingredients_data
+    ]
+    RecipeIngredient.objects.bulk_create(recipe_ingredients)
+    recipe.tags.set(tags_data)
+    return recipe
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -30,13 +50,10 @@ class UserSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(required=True)
 
     def get_is_subscribed(self, obj):
-        if self.context.get("request").user.is_authenticated:
-            current_user = self.context.get("request").user
-            if Follow.objects.filter(
-                user=current_user, author=obj.pk
-            ).exists():
-                return True
-        return False
+        return (
+            self.context.get("request").user.is_authenticated
+            and self.context.get("request").user in obj.followers.all()
+        )
 
     class Meta:
         fields = (
@@ -85,7 +102,6 @@ class FollowSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         queryset=User.objects.all(), slug_field="id"
     )
-
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.IntegerField(
         source="recipes.count", read_only=True
@@ -111,10 +127,13 @@ class FollowSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         limit = request.query_params.get("recipes_limit")
         if limit is not None:
-            limit = int(limit)
+            try:
+                limit = int(limit)
+            except ValueError:
+                pass
         else:
             limit = None
-        recipes = Recipe.objects.filter(author=obj.author)[:limit]
+        recipes = obj.author.recipes.all()[:limit]
         serializer = RecipeSerializer(
             recipes, many=True, context={"request": request}
         )
@@ -159,8 +178,10 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         read_only_fields = ("recipe", "id")
 
     def validate_amount(self, value):
-        if value < 1:
-            raise serializers.ValidationError("Количество должно не меньше 1.")
+        if value < MIN_AMOUNT_VALUE:
+            raise serializers.ValidationError(
+                f"Количество должно не меньше {MIN_AMOUNT_VALUE}."
+            )
         return value
 
     def to_representation(self, instance):
@@ -199,10 +220,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             "cooking_time",
             "id",
         )
-        read_only_fields = (
-            "author",
-            "id",
-        )
+        read_only_fields = ("author",)
         model = Recipe
 
     def validate(self, data):
@@ -235,53 +253,45 @@ class RecipeSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         ingredients_data = validated_data.pop("ingredients", [])
         tags_data = validated_data.pop("tags", [])
+
         recipe = Recipe.objects.create(**validated_data)
-        for ingredient_data in ingredients_data:
-            RecipeIngredient.objects.create(
-                recipe=recipe,
-                ingredient=ingredient_data["id"],
-                amount=ingredient_data["amount"],
-            )
-        recipe.tags.set(tags_data)
-        return recipe
+
+        return create_recipe_ingredients_and_set_tags(
+            recipe,
+            ingredients_data,
+            tags_data
+        )
 
     def update(self, instance, validated_data):
         ingredients_data = validated_data.pop("ingredients", [])
         tags_data = validated_data.pop("tags", [])
 
-        instance.name = validated_data.get("name", instance.name)
-        instance.text = validated_data.get("text", instance.text)
-        instance.image = validated_data.get("image", instance.image)
-        instance.cooking_time = validated_data.get(
-            "cooking_time", instance.cooking_time
+        super().update(instance, validated_data)
+
+        instance.ingredients.clear()
+        instance.tags.clear()
+
+        return create_recipe_ingredients_and_set_tags(
+            instance,
+            ingredients_data,
+            tags_data
         )
-        instance.save()
-
-        if ingredients_data:
-            instance.ingredients.clear()
-            for ingredient_data in ingredients_data:
-                RecipeIngredient.objects.create(
-                    recipe=instance,
-                    ingredient=ingredient_data["id"],
-                    amount=ingredient_data["amount"],
-                )
-        if tags_data:
-            instance.tags.clear()
-            instance.tags.set(tags_data)
-
-        return instance
 
     def get_is_favorited(self, obj):
-        if self.context.get("request").user.is_authenticated:
-            current_user = self.context.get("request").user
-            return obj.favorite_recipe.filter(user=current_user).exists()
-        return False
+        return (
+            self.context.get("request").user.is_authenticated
+            and obj.favorite_recipes.filter(
+                user=self.context.get("request").user
+            ).exists()
+        )
 
     def get_is_in_shopping_cart(self, obj):
-        if self.context.get("request").user.is_authenticated:
-            current_user = self.context.get("request").user
-            return obj.shopping_bucket.filter(user=current_user).exists()
-        return False
+        return (
+            self.context.get("request").user.is_authenticated
+            and obj.shopping_buckets.filter(
+                user=self.context.get("request").user
+            ).exists()
+        )
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

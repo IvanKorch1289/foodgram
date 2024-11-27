@@ -4,6 +4,7 @@ import os
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
+from recipes.constants import FILES
 from recipes.models import Ingredient
 
 
@@ -11,7 +12,7 @@ class Command(BaseCommand):
     help = "Добавляет данные в модель Ingredient из .csv файлов в базу данных"
 
     def handle(self, *args, **options):
-        path = os.path.dirname(settings.BASE_DIR) + "/data/ingredients.csv"
+        path = os.path.dirname(settings.BASE_DIR) + FILES.get("ingredients")
         with open(
             file=path,
             mode="r",
