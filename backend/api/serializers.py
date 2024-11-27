@@ -26,6 +26,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     avatar = Base64ImageField(required=False)
     is_subscribed = serializers.SerializerMethodField()
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
 
     def get_is_subscribed(self, obj):
         if self.context.get("request").user.is_authenticated:
@@ -113,7 +115,9 @@ class FollowSerializer(serializers.ModelSerializer):
         else:
             limit = None
         recipes = Recipe.objects.filter(author=obj.author)[:limit]
-        serializer = RecipeSerializer(recipes, many=True)
+        serializer = RecipeSerializer(
+            recipes, many=True, context={"request": request}
+        )
         return serializer.data
 
     def to_representation(self, instance):

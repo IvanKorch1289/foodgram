@@ -161,22 +161,6 @@ class UserViewSet(djoser_user):
     pagination_class = FoodgramPagination
     permission_classes = (IsOwnerOrReadOnly,)
 
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context.update({"request": self.request})
-        return context
-
-    def get_serializer_class(self):
-        if self.action == "create":
-            if settings.USER_CREATE_PASSWORD_RETYPE:
-                return settings.SERIALIZERS.user_create_password_retype
-            return settings.SERIALIZERS.user_create
-        if self.action == "set_password":
-            if settings.SET_PASSWORD_RETYPE:
-                return settings.SERIALIZERS.set_password_retype
-            return settings.SERIALIZERS.set_password
-        return self.serializer_class
-
     @action(
         detail=False,
         methods=["GET"],

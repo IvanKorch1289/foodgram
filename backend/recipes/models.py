@@ -29,6 +29,8 @@ class User(AbstractUser):
         verbose_name="Электронная почта",
         help_text="Уникальный адрес электронной почты",
     )
+    first_name = models.CharField("first name", max_length=150)
+    last_name = models.CharField("last name", max_length=150)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username", "first_name", "last_name"]
