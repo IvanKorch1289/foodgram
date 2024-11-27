@@ -13,7 +13,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("SECRET_KEY", default=get_random_secret_key())
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", default="127.0.0.1, localhost").split(",")
+ALLOWED_HOSTS = os.getenv(
+    "ALLOWED_HOSTS", default="127.0.0.1, localhost"
+).split(",")
 
 if ENVIRONMENT == "production":
     DEBUG = False
