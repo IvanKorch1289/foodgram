@@ -3,7 +3,6 @@ from io import StringIO
 
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from djoser.conf import settings
 from djoser.views import UserViewSet as djoser_user
 from pyshorteners import Shortener
 from rest_framework import status
