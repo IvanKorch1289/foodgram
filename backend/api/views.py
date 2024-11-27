@@ -77,7 +77,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == "DELETE":
             try:
-                busket = get_object_or_404(ShoppingBusket, user=user, recipe=recipe)
+                busket = get_object_or_404(
+                    ShoppingBusket, user=user, recipe=recipe
+                )
                 busket.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
             except Exception as ex:
@@ -103,7 +105,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         file_buffer.seek(0)
         file_content = file_buffer.read()
         header = {"Content-Disposition": 'attachment; filename="foodgram.txt"'}
-        return HttpResponse(file_content, content_type="text/plain", headers=header)
+        return HttpResponse(
+            file_content, content_type="text/plain", headers=header
+        )
 
     @action(
         detail=True,
@@ -124,7 +128,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == "DELETE":
             try:
-                favourite = get_object_or_404(FavouriteRecipe, user=user, recipe=recipe)
+                favourite = get_object_or_404(
+                    FavouriteRecipe, user=user, recipe=recipe
+                )
                 favourite.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
             except Exception as ex:
@@ -221,10 +227,14 @@ class UserViewSet(djoser_user):
                     recipes = recipes[:recipes_limit]
         page = self.paginate_queryset(follows)
         if page is not None:
-            serializer = FollowSerializer(page, many=True, context={"request": request})
+            serializer = FollowSerializer(
+                page, many=True, context={"request": request}
+            )
             return self.get_paginated_response(serializer.data)
 
-        serializer = FollowSerializer(follows, many=True, context={"request": request})
+        serializer = FollowSerializer(
+            follows, many=True, context={"request": request}
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(

@@ -20,7 +20,9 @@ class User(AbstractUser):
         help_text="Пароль",
         validators=[MinLengthValidator(8), validate_username],
     )
-    avatar = models.ImageField("Аватар", upload_to="static/", blank=True, null=True)
+    avatar = models.ImageField(
+        "Аватар", upload_to="static/", blank=True, null=True
+    )
     email = models.CharField(
         max_length=MAX_LENGTH_EMAIL,
         unique=True,
@@ -57,7 +59,9 @@ class IdDateFieldModel(models.Model):
 class Tag(IdDateFieldModel):
 
     name = models.CharField(
-        max_length=MAX_LENGTH_32_CHAR_FIELD, help_text="Наименование", db_index=True
+        max_length=MAX_LENGTH_32_CHAR_FIELD,
+        help_text="Наименование",
+        db_index=True
     )
     slug = models.SlugField()
 
@@ -70,7 +74,9 @@ class Tag(IdDateFieldModel):
 class Ingredient(IdDateFieldModel):
 
     name = models.CharField(
-        max_length=MAX_LENGTH_128_CHAR_FIELD, help_text="Наименование", db_index=True
+        max_length=MAX_LENGTH_128_CHAR_FIELD,
+        help_text="Наименование",
+        db_index=True
     )
 
     measurement_unit = models.CharField(
@@ -87,7 +93,9 @@ class Ingredient(IdDateFieldModel):
 class Recipe(IdDateFieldModel):
 
     name = models.CharField(
-        max_length=MAX_LENGTH_256_CHAR_FIELD, help_text="Наименование", db_index=True
+        max_length=MAX_LENGTH_256_CHAR_FIELD,
+        help_text="Наименование",
+        db_index=True
     )
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, verbose_name="Автор рецепта"
@@ -110,7 +118,8 @@ class Recipe(IdDateFieldModel):
         null=True,
         validators=[
             MinValueValidator(
-                MIN_DURATION_VALUE, message="Значение не может быть меньше 1 минуты"
+                MIN_DURATION_VALUE,
+                message="Значение не может быть меньше 1 минуты"
             )
         ],
     )
@@ -158,7 +167,9 @@ class RecipeUserFieldModel(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, verbose_name="Пользователь"
     )
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, verbose_name="Рецепт")
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE, verbose_name="Рецепт"
+    )
 
     class Meta:
         abstract = True
@@ -197,8 +208,12 @@ class ShoppingBusket(RecipeUserFieldModel):
 
 
 class Follow(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="following")
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="follower")
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="following"
+    )
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="follower"
+    )
 
     class Meta:
         verbose_name = "Подписка"

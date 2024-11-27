@@ -30,7 +30,9 @@ class UserSerializer(serializers.ModelSerializer):
     def get_is_subscribed(self, obj):
         if self.context.get("request").user.is_authenticated:
             current_user = self.context.get("request").user
-            if Follow.objects.filter(user=current_user, author=obj.pk).exists():
+            if Follow.objects.filter(
+                user=current_user, author=obj.pk
+            ).exists():
                 return True
         return False
 
@@ -78,10 +80,14 @@ class UserAvatarSerializer(serializers.ModelSerializer):
 
 class FollowSerializer(serializers.ModelSerializer):
 
-    author = serializers.SlugRelatedField(queryset=User.objects.all(), slug_field="id")
+    author = serializers.SlugRelatedField(
+        queryset=User.objects.all(), slug_field="id"
+    )
 
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.IntegerField(source="recipes.count", read_only=True)
+    recipes_count = serializers.IntegerField(
+        source="recipes.count", read_only=True
+    )
 
     class Meta:
         model = Follow
@@ -92,7 +98,9 @@ class FollowSerializer(serializers.ModelSerializer):
         author = self.initial_data.get("author")
 
         if Follow.objects.filter(user=user, author=author).exists():
-            raise serializers.ValidationError("Вы уже подписаны на этого автора.")
+            raise serializers.ValidationError(
+                "Вы уже подписаны на этого автора."
+            )
         if user == author:
             raise serializers.ValidationError("Нельзя подписаться на себя.")
         return data
@@ -109,7 +117,9 @@ class FollowSerializer(serializers.ModelSerializer):
         return serializer.data
 
     def to_representation(self, instance):
-        representation = UserSerializer(instance.user, context=self.context).data
+        representation = UserSerializer(
+            instance.user, context=self.context
+        ).data
         recipes_data = self.get_recipes(instance)
         for recipe in recipes_data:
             del recipe["ingredients"]
@@ -165,7 +175,9 @@ class RecipeSerializer(serializers.ModelSerializer):
     """Сериализатор модели Recipes."""
 
     ingredients = RecipeIngredientSerializer(many=True)
-    tags = serializers.PrimaryKeyRelatedField(many=True, queryset=Tag.objects.all())
+    tags = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Tag.objects.all()
+    )
     image = Base64ImageField()
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
@@ -198,7 +210,10 @@ class RecipeSerializer(serializers.ModelSerializer):
         if not ingredients:
             errors["ingredients"] = "Поле не может быть пустым."
         else:
-            ingredient_list = [dict(ingredient)["id"] for ingredient in ingredients]
+            ingredient_list = [
+                dict(ingredient)["id"]
+                for ingredient in ingredients
+            ]
             if len(set(ingredient_list)) != len(ingredient_list):
                 errors["ingredients"] = "Ингредиенты не должны повторяться."
         if not tags:
@@ -268,7 +283,9 @@ class RecipeSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
 
         tags_data = TagSerializer(instance.tags.all(), many=True).data
-        author_data = UserSerializer(instance.author, context=self.context).data
+        author_data = UserSerializer(
+            instance.author, context=self.context
+        ).data
         ingredients = instance.recipe_ingredients.prefetch_related(
             Prefetch("ingredient")
         )
@@ -293,7 +310,9 @@ class RecipeSerializer(serializers.ModelSerializer):
 class BusketFavouriteReprentSerializer(serializers.Serializer):
 
     def to_representation(self, instance):
-        representation = RecipeSerializer(instance.recipe, context=self.context).data
+        representation = RecipeSerializer(
+            instance.recipe, context=self.context
+        ).data
         del representation["ingredients"]
         del representation["tags"]
         del representation["is_favorited"]

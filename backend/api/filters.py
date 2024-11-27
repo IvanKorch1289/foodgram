@@ -26,7 +26,9 @@ class RecipeFilterSet(FilterSet):
         field_name="author", to_field_name="id", queryset=User.objects.all()
     )
     tags = ModelMultipleChoiceFilter(
-        field_name="tags__slug", to_field_name="slug", queryset=Tag.objects.all()
+        field_name="tags__slug",
+        to_field_name="slug",
+        queryset=Tag.objects.all()
     )
     is_favorited = BooleanFilter(method="filter_is_favorited")
     is_in_shopping_cart = BooleanFilter(method="filter_is_in_shopping_cart")
