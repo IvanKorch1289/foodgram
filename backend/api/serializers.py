@@ -96,7 +96,7 @@ class UserAvatarSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ("avatar",)
         model = User
-        
+
 
 class UserRecipeSerializer(UserSerializer):
 
@@ -137,7 +137,7 @@ class FollowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Follow
         fields = ("user", "author")
-  
+
     def validate(self, attrs):
         user = attrs.get("user")
         author = attrs.get("author")
@@ -148,7 +148,7 @@ class FollowSerializer(serializers.ModelSerializer):
             )
         if user == author:
             raise serializers.ValidationError("Нельзя подписаться на себя.")
-        
+
         return attrs
 
     def create(self, validated_data):

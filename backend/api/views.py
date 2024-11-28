@@ -158,7 +158,9 @@ class UserViewSet(djoser_user):
         permission_classes=(IsAuthenticated,),
     )
     def get_all_subscriptions(self, request):
-        author_ids = request.user.following.values_list('author__id', flat=True)
+        author_ids = request.user.following.values_list(
+            'author__id', flat=True
+        )
         authors = User.objects.filter(id__in=author_ids)
         page = self.paginate_queryset(authors)
 
@@ -189,11 +191,17 @@ class UserViewSet(djoser_user):
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
-            user_recipe_serializer = UserRecipeSerializer(author, context={'request': request})
-            return Response(user_recipe_serializer.data, status=status.HTTP_201_CREATED)
+            user_recipe_serializer = UserRecipeSerializer(
+                author, context={'request': request}
+            )
+            return Response(
+                user_recipe_serializer.data, status=status.HTTP_201_CREATED
+            )
         else:
             try:
-                follow = get_object_or_404(Follow, user=request.user, author=author)
+                follow = get_object_or_404(
+                    Follow, user=request.user, author=author
+                )
                 follow.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
             except Exception as ex:
