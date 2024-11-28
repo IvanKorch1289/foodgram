@@ -1,7 +1,6 @@
 from collections import defaultdict
-from io import StringIO
-
 from django.shortcuts import get_object_or_404
+from io import StringIO
 from rest_framework import status
 from rest_framework.response import Response
 

@@ -7,7 +7,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (
     IsAuthenticated,
-    IsAuthenticatedOrReadOnly
+    IsAuthenticatedOrReadOnly,
 )
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
@@ -21,7 +21,8 @@ from api.serializers import (
     RecipeSerializer,
     TagSerializer,
     UserAvatarSerializer,
-    UserSerializer
+    UserRecipeSerializer,
+    UserSerializer,
 )
 from api.utils import call_serializer, write_to_file
 from recipes.models import (
@@ -31,7 +32,7 @@ from recipes.models import (
     Recipe,
     ShoppingBusket,
     Tag,
-    User
+    User,
 )
 
 
@@ -157,16 +158,18 @@ class UserViewSet(djoser_user):
         permission_classes=(IsAuthenticated,),
     )
     def get_all_subscriptions(self, request):
-        follows = request.user.following.all()
-        page = self.paginate_queryset(follows)
+        author_ids = request.user.following.values_list('author__id', flat=True)
+        authors = User.objects.filter(id__in=author_ids)
+        page = self.paginate_queryset(authors)
+
         if page is not None:
-            serializer = FollowSerializer(
+            serializer = UserRecipeSerializer(
                 page, many=True, context={"request": request}
             )
             return self.get_paginated_response(serializer.data)
 
-        serializer = FollowSerializer(
-            follows, many=True, context={"request": request}
+        serializer = UserRecipeSerializer(
+            authors, many=True, context={"request": request}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -178,19 +181,19 @@ class UserViewSet(djoser_user):
     )
     def subscribe(self, request, id=None):
         author = get_object_or_404(User, pk=id)
-        user = request.user
         if request.method == "POST":
             serializer = FollowSerializer(
-                data={"user": user.id, "author": author.id},
+                data={"user": request.user.id, "author": author.id},
                 context={"request": request},
             )
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            user_recipe_serializer = UserRecipeSerializer(author, context={'request': request})
+            return Response(user_recipe_serializer.data, status=status.HTTP_201_CREATED)
         else:
             try:
-                follow = get_object_or_404(Follow, user=user, author=author)
+                follow = get_object_or_404(Follow, user=request.user, author=author)
                 follow.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
             except Exception as ex:

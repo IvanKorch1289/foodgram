@@ -12,7 +12,7 @@ from recipes.models import (
     RecipeIngredient,
     ShoppingBusket,
     Tag,
-    User
+    User,
 )
 
 
@@ -96,25 +96,51 @@ class UserAvatarSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ("avatar",)
         model = User
+        
+
+class UserRecipeSerializer(UserSerializer):
+
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+
+    class Meta(UserSerializer.Meta):
+        fields = UserSerializer.Meta.fields + (
+            'recipes_count',
+            'recipes'
+        )
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
+
+    def get_recipes(self, obj):
+        request = self.context.get("request")
+        if "recipes_limit" in request.query_params:
+            limit = request.query_params.get("recipes_limit")
+            try:
+                limit = int(limit)
+            except ValueError:
+                pass
+        else:
+            limit = None
+        recipes = obj.recipes.all()[:limit]
+        serializer = LimitedRecipeSerializer(
+            recipes, many=True, context={"request": request}
+        )
+        return serializer.data
 
 
 class FollowSerializer(serializers.ModelSerializer):
 
-    author = serializers.SlugRelatedField(
-        queryset=User.objects.all(), slug_field="id"
-    )
-    recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.IntegerField(
-        source="recipes.count", read_only=True
-    )
+    author = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
 
     class Meta:
         model = Follow
-        fields = ("user", "recipes", "recipes_count", "author")
-
-    def validate(self, data):
-        user = self.initial_data.get("user")
-        author = self.initial_data.get("author")
+        fields = ("user", "author")
+  
+    def validate(self, attrs):
+        user = attrs.get("user")
+        author = attrs.get("author")
 
         if Follow.objects.filter(user=user, author=author).exists():
             raise serializers.ValidationError(
@@ -122,39 +148,11 @@ class FollowSerializer(serializers.ModelSerializer):
             )
         if user == author:
             raise serializers.ValidationError("Нельзя подписаться на себя.")
-        return data
+        
+        return attrs
 
-    def get_recipes(self, obj):
-        request = self.context.get("request")
-        limit = request.query_params.get("recipes_limit")
-        if limit is not None:
-            try:
-                limit = int(limit)
-            except ValueError:
-                pass
-        else:
-            limit = None
-        recipes = obj.author.recipes.all()[:limit]
-        serializer = RecipeSerializer(
-            recipes, many=True, context={"request": request}
-        )
-        return serializer.data
-
-    def to_representation(self, instance):
-        representation = UserSerializer(
-            instance.user, context=self.context
-        ).data
-        recipes_data = self.get_recipes(instance)
-        for recipe in recipes_data:
-            del recipe["ingredients"]
-            del recipe["tags"]
-            del recipe["is_favorited"]
-            del recipe["is_in_shopping_cart"]
-            del recipe["author"]
-            del recipe["text"]
-        representation["recipes"] = recipes_data
-        representation["recipes_count"] = len(recipes_data)
-        return representation
+    def create(self, validated_data):
+        return Follow.objects.create(**validated_data)
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -322,18 +320,19 @@ class RecipeSerializer(serializers.ModelSerializer):
         return representation
 
 
+class LimitedRecipeSerializer(serializers.ModelSerializer):
+    """Сериализатор для представления рецептов без лишних полей."""
+    class Meta:
+        model = Recipe
+        fields = ("id", "name", "image", "cooking_time")
+
+
 class BusketFavouriteReprentSerializer(serializers.Serializer):
 
     def to_representation(self, instance):
-        representation = RecipeSerializer(
+        representation = LimitedRecipeSerializer(
             instance.recipe, context=self.context
         ).data
-        del representation["ingredients"]
-        del representation["tags"]
-        del representation["is_favorited"]
-        del representation["is_in_shopping_cart"]
-        del representation["author"]
-        del representation["text"]
         return representation
 
 
