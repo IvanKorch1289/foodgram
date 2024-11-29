@@ -26,6 +26,7 @@ class IngredientInline(admin.StackedInline):
     extra = 0
     min_num = MIN_COUNT_ADMIN
 
+
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     inlines = [TagInline, IngredientInline]
