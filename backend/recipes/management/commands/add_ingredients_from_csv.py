@@ -12,7 +12,9 @@ class Command(BaseCommand):
     help = "Добавляет данные в модель Ingredient из .csv файлов в базу данных"
 
     def handle(self, *args, **options):
-        path = os.path.dirname(settings.BASE_DIR) + FILES.get("ingredients")
+        dir = os.path.dirname(settings.BASE_DIR.parent)
+        path = dir + FILES.get("ingredients")
+
         with open(
             file=path,
             mode="r",

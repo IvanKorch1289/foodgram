@@ -3,8 +3,10 @@ from rest_framework.permissions import SAFE_METHODS, BasePermission
 
 class IsOwner(BasePermission):
     """
-    Разрешение, позволяющее владельцу объекта редактировать его,
-    а остальным пользователям только читать.
+    Разрешение, позволяющее владельцу объекта редактировать
+
+    Автор объекта может редактировать и удалять его, для
+    остальных доступно только чтение.
     """
 
     def has_object_permission(self, request, view, obj):

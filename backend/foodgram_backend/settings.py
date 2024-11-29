@@ -18,11 +18,7 @@ ALLOWED_HOSTS = os.getenv(
     "ALLOWED_HOSTS", default="127.0.0.1, localhost"
 ).split(",")
 
-if ENVIRONMENT == "production":
-    DEBUG = False
-else:
-    DEBUG = True
-
+DEBUG = False if ENVIRONMENT == "production" else True
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -68,7 +64,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "foodgram_backend.wsgi.application"
 
-
 POSTGRES_DB = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -105,7 +100,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 LANGUAGE_CODE = "en-ru"
 
 TIME_ZONE = "UTC"
@@ -115,9 +109,11 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+
 STATIC_ROOT = BASE_DIR / "collected_static"
 
 MEDIA_URL = "/media/"
+
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -144,7 +140,6 @@ DJOSER = {
         'me': ('djoser.permissions.CurrentUserOrAdmin',),
     },
 }
-
 
 LOGGING = {
     "version": 1,

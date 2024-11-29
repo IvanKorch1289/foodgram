@@ -1,6 +1,7 @@
 from django.contrib.auth.admin import UserAdmin, admin
 from django.utils.html import format_html
 
+from recipes.constants import MIN_COUNT_ADMIN
 from recipes.models import Ingredient, Recipe, Tag, User
 
 
@@ -17,12 +18,13 @@ class TagAdmin(admin.ModelAdmin):
 class TagInline(admin.TabularInline):
     model = Recipe.tags.through
     extra = 0
+    min_num = MIN_COUNT_ADMIN
 
 
 class IngredientInline(admin.StackedInline):
     model = Recipe.ingredients.through
     extra = 0
-
+    min_num = MIN_COUNT_ADMIN
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):

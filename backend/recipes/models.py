@@ -94,7 +94,6 @@ class Ingredient(IdDateFieldModel):
     )
 
     class Meta(IdDateFieldModel.Meta):
-        default_related_name = "ingredients"
         verbose_name = "Ингредиент"
         verbose_name_plural = "Ингредиенты"
         constraints = [
@@ -123,14 +122,10 @@ class Recipe(IdDateFieldModel):
     )
     text = models.CharField(
         help_text="Текст рецепта",
-        max_length=MAX_LENGTH_RECIPE_CHAR_FIELD,
-        blank=True,
-        null=True,
+        max_length=MAX_LENGTH_RECIPE_CHAR_FIELD
     )
     cooking_time = models.PositiveSmallIntegerField(
         help_text="Время приготовления",
-        blank=True,
-        null=True,
         validators=[
             MinValueValidator(
                 MIN_DURATION_VALUE,
@@ -192,6 +187,7 @@ class RecipeUserFieldModel(models.Model):
 
     class Meta:
         abstract = True
+        ordering = ["user"]
 
     @classmethod
     def set_constraints(cls, model):
@@ -247,6 +243,10 @@ class Follow(models.Model):
                 name="unique_subscriber_himself",
             ),
         ]
+
+    def __str__(self):
+        name = f"{self.user.username} - {self.author.username}"
+        return name[:MAX_STR]
 
 
 ShoppingBusket.setup()

@@ -1,4 +1,3 @@
-from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as djoser_user
@@ -16,17 +15,17 @@ from api.filters import IngredientFilterSet, RecipeFilterSet
 from api.pagination import FoodgramPagination
 from api.permissions import IsOwner
 from api.serializers import (
+    FavouriteRecipeSerializer,
     FollowSerializer,
     IngredientSerializer,
     RecipeSerializer,
+    ShoppingBusketSerializer,
     TagSerializer,
     UserAvatarSerializer,
-    UserRecipeSerializer,
     UserSerializer,
 )
 from api.utils import call_serializer, write_to_file
 from recipes.models import (
-    FavouriteRecipe,
     Follow,
     Ingredient,
     Recipe,
@@ -64,7 +63,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,),
     )
     def shopping_cart(self, request, pk=None):
-        return call_serializer(ShoppingBusket, request, pk)
+        return call_serializer(ShoppingBusketSerializer, request, pk)
 
     @action(
         detail=False,
@@ -81,12 +80,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         )
 
         data = [(name, amount) for name, amount in shopping_buskets]
-        file = write_to_file(data)
-        header = {"Content-Disposition": 'attachment; filename="foodgram.txt"'}
-
-        return HttpResponse(
-            file, content_type="text/plain", headers=header
-        )
+        return write_to_file(data)
 
     @action(
         detail=True,
@@ -95,7 +89,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,),
     )
     def favorite(self, request, pk=None):
-        return call_serializer(FavouriteRecipe, request, pk)
+        return call_serializer(FavouriteRecipeSerializer, request, pk)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -144,12 +138,11 @@ class UserViewSet(djoser_user):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            try:
-                user.avatar.delete(save=True)
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            except Exception as ex:
-                return Response(str(ex), status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user.avatar.delete(save=True)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as ex:
+            return Response(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
     @action(
         detail=False,
@@ -158,22 +151,13 @@ class UserViewSet(djoser_user):
         permission_classes=(IsAuthenticated,),
     )
     def get_all_subscriptions(self, request):
-        author_ids = request.user.following.values_list(
-            'author__id', flat=True
-        )
-        authors = User.objects.filter(id__in=author_ids)
-        page = self.paginate_queryset(authors)
+        following = request.user.following.all()
+        page = self.paginate_queryset(following)
 
-        if page is not None:
-            serializer = UserRecipeSerializer(
-                page, many=True, context={"request": request}
-            )
-            return self.get_paginated_response(serializer.data)
-
-        serializer = UserRecipeSerializer(
-            authors, many=True, context={"request": request}
+        serializer = FollowSerializer(
+            page, many=True, context={"request": request}
         )
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return self.get_paginated_response(serializer.data)
 
     @action(
         detail=True,
@@ -191,18 +175,14 @@ class UserViewSet(djoser_user):
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
-            user_recipe_serializer = UserRecipeSerializer(
-                author, context={'request': request}
-            )
             return Response(
-                user_recipe_serializer.data, status=status.HTTP_201_CREATED
+                serializer.data, status=status.HTTP_201_CREATED
             )
-        else:
-            try:
-                follow = get_object_or_404(
-                    Follow, user=request.user, author=author
-                )
-                follow.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            except Exception as ex:
-                return Response(str(ex), status=status.HTTP_400_BAD_REQUEST)
+        try:
+            follow = get_object_or_404(
+                Follow, user=request.user, author=author
+            )
+            follow.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as ex:
+            return Response(str(ex), status=status.HTTP_400_BAD_REQUEST)
