@@ -52,7 +52,7 @@ class RecipeAdmin(admin.ModelAdmin):
 @admin.register(User)
 class FoodgramUserAdmin(UserAdmin):
     search_fields = ("username", "email")
-    list_display = ("id", "first_name", "last_name," "username", "email")
+    list_display = ("id", "first_name", "last_name", "username", "email")
 
     def followers_count(self, obj):
         count = obj.followers.count()
