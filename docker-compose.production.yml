@@ -23,9 +23,8 @@ services:
     command: cp -r /app/build/. /static/
     volumes:
       - static:/static
-      - ../frontend/:/app/result_build/
-  nginx:
-    image: nginx:1.21.3-alpine
+  gateway:
+    image: crazyivan1289/kittygram_gateway
     env_file: .env
     ports:
       - 8000:80
