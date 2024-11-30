@@ -24,7 +24,7 @@ services:
     volumes:
       - static:/static
   gateway:
-    image: crazyivan1289/kittygram_gateway
+    image: crazyivan1289/foodgram_gateway
     env_file: .env
     ports:
       - 8000:80
