@@ -18,7 +18,7 @@ ALLOWED_HOSTS = os.getenv(
     "ALLOWED_HOSTS", default="127.0.0.1, localhost"
 ).split(",")
 
-DEBUG = False if ENVIRONMENT == "production" else True
+DEBUG = ENVIRONMENT == "production"
 
 INSTALLED_APPS = [
     "django.contrib.admin",

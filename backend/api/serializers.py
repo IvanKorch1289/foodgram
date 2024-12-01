@@ -79,6 +79,7 @@ class UserAvatarSerializer(serializers.ModelSerializer):
 
 
 class FollowSerializer(serializers.ModelSerializer):
+    """Сериализатор модели Follow."""
 
     recipes_count = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
@@ -299,12 +300,14 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 class LimitedRecipeSerializer(serializers.ModelSerializer):
     """Сериализатор для представления рецептов без лишних полей."""
+
     class Meta:
         model = Recipe
         fields = ("id", "name", "image", "cooking_time")
 
 
 class BusketFavouriteReprentSerializer(serializers.Serializer):
+    """Сериализатор с общими полями для ShoppingBusket, FavouriteRecipe."""
 
     def to_representation(self, instance):
         representation = LimitedRecipeSerializer(
@@ -316,6 +319,8 @@ class BusketFavouriteReprentSerializer(serializers.Serializer):
 class ShoppingBusketSerializer(
     BusketFavouriteReprentSerializer, serializers.ModelSerializer
 ):
+    """Сериализатор модели ShoppingBusket."""
+
     class Meta:
         model = ShoppingBusket
         fields = ("user", "recipe")
@@ -331,6 +336,7 @@ class ShoppingBusketSerializer(
 class FavouriteRecipeSerializer(
     BusketFavouriteReprentSerializer, serializers.ModelSerializer
 ):
+    """Сериализатор модели FavouriteRecipe."""
 
     class Meta:
         model = FavouriteRecipe

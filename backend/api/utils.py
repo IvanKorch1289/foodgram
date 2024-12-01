@@ -10,10 +10,12 @@ from recipes.models import Recipe
 
 
 def write_to_file(data):
+    unpacked_data = [(name, amount) for name, amount in data]
+
     file_buffer = StringIO()
     ingredients = defaultdict(int)
 
-    for name, amount in data:
+    for name, amount in unpacked_data:
         ingredients[name] += amount
         file_buffer.write(f"{name} — {amount}g\n")
 

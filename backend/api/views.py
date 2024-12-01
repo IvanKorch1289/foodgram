@@ -79,8 +79,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'recipe__recipe_ingredients__amount'
         )
 
-        data = [(name, amount) for name, amount in shopping_buskets]
-        return write_to_file(data)
+        return write_to_file(data=shopping_buskets)
 
     @action(
         detail=True,
